@@ -62,6 +62,7 @@ private:
 
     void initVulkan() {
         createInstance();
+        // explicitly set up the debug messenger create info struct
         setupDebugMessenger();
     }
 
@@ -72,9 +73,10 @@ private:
     }
 
     void cleanup() {
-        if (enableValidationLayers) {
-            DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-        }
+        // this cause an error, which will be caught by the debug callback
+        // if (enableValidationLayers) {
+        //     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+        // }
 
         vkDestroyInstance(instance, nullptr);
 
@@ -109,8 +111,11 @@ private:
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
 
-            populateDebugMessengerCreateInfo(debugCreateInfo);
-            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+            // // implicitly set up the debug messenger create info struct
+
+            // populateDebugMessengerCreateInfo(debugCreateInfo);
+            // debugCreateInfo.pUserData = (void*)0x1234;
+            // createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
         } else {
             createInfo.enabledLayerCount = 0;
 
@@ -135,7 +140,7 @@ private:
 
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         populateDebugMessengerCreateInfo(createInfo);
-
+        createInfo.pUserData = (void*)0x5678;
         if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
             throw std::runtime_error("failed to set up debug messenger!");
         }
@@ -181,8 +186,8 @@ private:
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
+        // std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        std::cerr << "Messenger: " << pUserData << " | Message: " << pCallbackData->pMessage << std::endl;
         return VK_FALSE;
     }
 };
